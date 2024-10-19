@@ -9,8 +9,14 @@ export interface whiskerResponse {
 export interface Robot {
   serial: string;
   name: string;
-  isNightLightLEDOn: boolean;
-  robotStatus: string;
-  catDetect: string;
-  DFILevelPercent: number;
+  state: RobotState;
+}
+
+export interface RobotState {
+  info: RobotStateInfo;
+}
+
+export interface RobotStateInfo {
+  level: number;
+  autoNightMode: boolean;
 }

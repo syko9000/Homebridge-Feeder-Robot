@@ -1,25 +1,25 @@
-# Litter Robot 4 Homebridge Plugin
+# Whisker Feeder Robot Homebridge Plugin
 
 ## Features
-- Supports Multiple Litter Robot 4 Devices 🤖🤖🤖🤖🤖🤖🤖
-- Toggle The Globle Light 💡
-- Cat Detect Sensor 📸
-- Waste Drawer Level Sensor 💰
+- Supports Multiple Feeder Robot Devices 🤖🤖🤖🤖🤖🤖🤖
+- Toggle The Night Light mode 💡
+- Give A Snack 🐟
+- Food Level 📉
 
 
 ## Supported Robot Versions
-- Litter Robot 4
+- Feeder Robot
 
 ## Installation
 
 #### For Homebridge Web UI Users
-Go to plugin page, search for `@rylee-s/Homebridge-Litter-Robot-4` and install it.
+Go to plugin page, search for `@syko9000/Homebridge-Feeder-Robot` and install it.
 
 #### For Homebridge Command Line Users
 
 Run the following command in the terminal:
 ```
-npm install @rylee-s/Homebridge-Litter-Robot-4
+npm install @syko9000/Homebridge-Feeder-Robot
 ```
 
 
@@ -34,7 +34,7 @@ Just enter the Username and Password you use for your Whisker App
 
 ```json
 {
-            "platform": "LitterRobot4",
+            "platform": "FeederRobot",
             "email": "whisker.app@email.com",
             "password": "WhiskerAppPassword"
 }

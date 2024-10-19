@@ -1,18 +1,18 @@
 {
-  "pluginAlias": "LitterRobot4",
+  "pluginAlias": "FeederRobot",
   "pluginType": "platform",
   "singular": true,
   "schema": {
     "type": "object",
     "properties": {
       "email": {
-        "title": "Litter Robot App Email",
+        "title": "Whisker App Email",
         "type": "string",
         "required": true,
         "default": "my_email"
       },
       "password": {
-        "title": "Litter Robot App Password",
+        "title": "Whisker App Password",
         "type": "string",
         "required": true,
         "default": "my_password"

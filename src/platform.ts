@@ -1,27 +1,29 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
 
 import Whisker from './api/Whisker';
-import { LitterRobot } from './litterRobot';
+import { FeederRobot } from './feederRobot';
 import { PLUGIN_NAME, PLATFORM_NAME } from './settings';
 import { Robot } from './api/Whisker.types';
+import { setDebugEnabled } from 'homebridge/lib/logger';
 
 /**
  * HomebridgePlatform
  * This class is the main constructor for your plugin, this is where you should
  * parse the user config and discover/register accessories with Homebridge.
  */
-export class LitterRobotPlatform implements DynamicPlatformPlugin {
+export class FeederRobotPlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
   public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
 
   // this is used to track restored cached accessories
   public readonly accessories: PlatformAccessory[] = [];
-  public litterRobots: LitterRobot[] = [];
+  public feederRobots: FeederRobot[] = [];
   constructor(
     public readonly log: Logger,
     public readonly config: PlatformConfig,
     public readonly api: API,
   ) {
+    setDebugEnabled(true);
     this.log.debug('Finished initializing platform:', this.config.name);
 
     const account = new Whisker(this.config, this.log, this.accessories, this.api);
@@ -37,7 +39,7 @@ export class LitterRobotPlatform implements DynamicPlatformPlugin {
       account.authenticate().then(() => {
         this.log.debug('Authenticated now discovering devices');
         this.discoverDevices(account);
-        this.pollForUpdates(account, 100000);
+        //this.pollForUpdates(account, 100000);
       });
     });
   }
@@ -73,24 +75,20 @@ export class LitterRobotPlatform implements DynamicPlatformPlugin {
    */
   async discoverDevices(account: Whisker) {
     const data = JSON.stringify({
-      query: `{
-        query: getLitterRobot4ByUser(userId: "${account.accountId}") {
-            serial
-            name
-            isNightLightLEDOn
-        }
-    
-    }`,
+      query: `query GetFeeders {
+          state
+        }`,
     });
+    this.log.debug(data);
     account.sendCommand(data).then((response) => {
-      this.log.debug('Discovered devices:', JSON.stringify(response.data.data.query));
+      this.log.debug('Discovered devices:', JSON.stringify(response.data));
       let devices = response.data.data.query;
       devices ||= [];
 
       // loop over the discovered devices and register each one
       for (const device of devices) {
         this.log.debug('Discovered device:', device.name, device.serial);
-        this.litterRobots.push(new LitterRobot(account, device, this, this.log));
+        //this.feederRobots.push(new FeederRobot(account, device, this, this.log));
       }
     });
   }
@@ -99,23 +97,30 @@ export class LitterRobotPlatform implements DynamicPlatformPlugin {
   pollForUpdates(account: Whisker, interval: number) {
     const command = JSON.stringify({
       query: `{
-        query: getLitterRobot4ByUser(userId: "${account.accountId}") {
-            serial
+        query getFeeders {
+          feeder_unit {
+            id
             name
-            isNightLightLEDOn
-            robotStatus
-            catDetect
-            DFILevelPercent
+            serial
+            timezone
+            isEighthCupEnabled
+            created_at
+            household_id
+            state {
+                id
+                info
+            }
+          }
         }
-    }`,
+      }`,
     });
     account.sendCommand(command).then((response) => {
       const data = response.data.data.query;
 
       data.forEach((device: Robot) => {
-        const litterRobot = this.litterRobots.find((bot) => bot.serialNumber === device.serial);
-        if (litterRobot) {
-          litterRobot.update(device);
+        const feederRobot = this.feederRobots.find((bot) => bot.serialNumber === device.serial);
+        if (feederRobot) {
+          feederRobot.update(device);
         }
       });
 
@@ -125,4 +130,3 @@ export class LitterRobotPlatform implements DynamicPlatformPlugin {
     });
   }
 }
-

@@ -1,15 +1,15 @@
 import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 
-import { LitterRobotPlatform } from '../platform';
+import { FeederRobotPlatform } from '../platform';
 import Whisker from '../api/Whisker';
-import { LitterRobot } from '../litterRobot';
+import { FeederRobot } from '../feederRobot';
 
 /**
  * Platform Accessory
  * An instance of this class is created for each accessory your platform registers
  * Each accessory may expose multiple services of different service types.
  */
-export class GlobeLightAccessory {
+export class NightLightAccessory {
   private service: Service;
   private accessory: PlatformAccessory;
   private name: string;
@@ -19,19 +19,19 @@ export class GlobeLightAccessory {
   };
 
   constructor(
-    private readonly platform: LitterRobotPlatform,
+    private readonly platform: FeederRobotPlatform,
     private readonly account: Whisker,
-    private readonly LitterRobot: LitterRobot,
+    private readonly FeederRobot: FeederRobot,
   ) {
-    this.name = this.LitterRobot.name + ' Globe Light';
-    this.uuid = this.LitterRobot.uuid.globeLight;
+    this.name = this.FeederRobot.name + ' Night Light';
+    this.uuid = this.FeederRobot.uuid.nightLight;
     this.accessory = this.platform.getOrCreateAccessory(this.uuid, this.name);
 
     // set accessory information
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Whisker Inc.')
-      .setCharacteristic(this.platform.Characteristic.Model, 'Litter Robot 4 Globe Light')
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, this.LitterRobot.serialNumber);
+      .setCharacteristic(this.platform.Characteristic.Model, 'Litter Robot 4 Night Light')
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, this.FeederRobot.serialNumber);
 
     // get the LightBulb service if it exists, otherwise create a new LightBulb service
     // you can create multiple services for each accessory
@@ -63,14 +63,14 @@ export class GlobeLightAccessory {
     const commandValue = value ? 'nightLightModeOn' : 'nightLightModeOff';
     const command = JSON.stringify({
       query: `mutation { 
-        sendLitterRobot4Command(input: {serial: "${this.LitterRobot.serialNumber}", command: "${commandValue}"})
+        sendLitterRobot4Command(input: {serial: "${this.FeederRobot.serialNumber}", command: "${commandValue}"})
         }`,
     });
 
-    this.platform.log.debug('Toggle Globle Light -> ', value, command);
+    this.platform.log.debug('Toggle Night Light -> ', value, command);
 
     this.account.sendCommand(command).then((response) => {
-      this.platform.log.debug('Toggle Globle Light Cmd Resonse -> ', response.data);
+      this.platform.log.debug('Toggle Night Light Cmd Response -> ', response.data);
     });
     this.state.On = value as boolean;
     return value;

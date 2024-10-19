@@ -60,6 +60,7 @@ export default class Whisker {
         this.log.debug('Authenticate: Get Token Response -> ', JSON.stringify(response.data));
         await this.verifyToken(response.data.token).then((token) => {
           this.token = `Bearer ${token}`;
+          this.log.debug(this.token);
         });
       })
       .catch((error) => {

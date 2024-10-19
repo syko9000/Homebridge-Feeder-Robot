@@ -1,11 +1,11 @@
 import { API } from 'homebridge';
 
 import { PLATFORM_NAME } from './settings';
-import { LitterRobotPlatform } from './platform';
+import { FeederRobotPlatform } from './platform';
 
 /**
  * This method registers the platform with Homebridge
  */
 export = (api: API) => {
-  api.registerPlatform(PLATFORM_NAME, LitterRobotPlatform);
+  api.registerPlatform(PLATFORM_NAME, FeederRobotPlatform);
 };

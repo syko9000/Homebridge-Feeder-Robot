@@ -1,5 +1,7 @@
 # Whisker Feeder Robot Homebridge Plugin
 
+This is not yet functional.
+
 ## Features
 - Supports Multiple Feeder Robot Devices 🤖🤖🤖🤖🤖🤖🤖
 - Toggle The Night Light mode 💡

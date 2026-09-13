@@ -46,6 +46,39 @@ export class FeederRobotPlatform implements DynamicPlatformPlugin {
     this.accessories.push(accessory);
   }
 
+  private getOrCreateAccessory(uuid: string, name: string): PlatformAccessory {
+    const existing = this.accessories.find((accessory) => accessory.UUID === uuid);
+    if (existing) {
+      this.log.info('Restoring accessory from cache:', existing.displayName);
+      return existing;
+    }
+
+    this.log.info('Adding new accessory:', name);
+    const accessory = new this.api.platformAccessory(name, uuid);
+    this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+    this.accessories.push(accessory);
+    return accessory;
+  }
+
+  /**
+   * v1 registered one combined accessory per feeder (food level + both switches as services on
+   * it). That made Feed Now and Night Light show up as two same-named controls grouped under one
+   * Home app tile, since Home doesn't adopt a plugin's service names over a name the user already
+   * assigned to a sibling service. Splitting each control into its own accessory avoids that.
+   * This removes the old combined accessory (if present) so it doesn't linger as an orphan.
+   */
+  private removeLegacyCombinedAccessory(feeder: FeederUnit): void {
+    const legacyUuid = this.api.hap.uuid.generate(feeder.serial);
+    const index = this.accessories.findIndex((accessory) => accessory.UUID === legacyUuid);
+    if (index === -1) {
+      return;
+    }
+
+    this.log.info('Removing old combined accessory for', feeder.name, '-- replaced by separate accessories');
+    this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [this.accessories[index]]);
+    this.accessories.splice(index, 1);
+  }
+
   private async discoverDevices(): Promise<void> {
     let feeders: FeederUnit[];
     try {
@@ -56,19 +89,25 @@ export class FeederRobotPlatform implements DynamicPlatformPlugin {
     }
 
     for (const feeder of feeders) {
-      const uuid = this.api.hap.uuid.generate(feeder.serial);
-      let accessory = this.accessories.find((existing) => existing.UUID === uuid);
+      this.removeLegacyCombinedAccessory(feeder);
 
-      if (accessory) {
-        this.log.info('Restoring feeder from cache:', feeder.name);
-      } else {
-        this.log.info('Adding new feeder:', feeder.name);
-        accessory = new this.api.platformAccessory(feeder.name, uuid);
-        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-        this.accessories.push(accessory);
-      }
+      const foodLevelAccessory = this.getOrCreateAccessory(
+        this.api.hap.uuid.generate(`${feeder.serial}:food-level`),
+        `${feeder.name} Food Level`,
+      );
+      const feedNowAccessory = this.getOrCreateAccessory(
+        this.api.hap.uuid.generate(`${feeder.serial}:feed-now`),
+        `${feeder.name} Feed Now`,
+      );
+      const nightLightAccessory = this.getOrCreateAccessory(
+        this.api.hap.uuid.generate(`${feeder.serial}:night-light`),
+        `${feeder.name} Night Light`,
+      );
 
-      this.feederAccessories.set(feeder.serial, new FeederRobotAccessory(this, accessory, this.client, feeder));
+      this.feederAccessories.set(
+        feeder.serial,
+        new FeederRobotAccessory(this, foodLevelAccessory, feedNowAccessory, nightLightAccessory, this.client, feeder),
+      );
     }
   }
 

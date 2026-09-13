@@ -5,13 +5,17 @@ import { FeederUnit, foodLevelToPercent } from './api/types';
 import { FeederRobotPlatform } from './platform';
 
 const FEED_NOW_RESET_MS = 1000;
-const FEED_NOW_SUBTYPE = 'feed-now';
-const NIGHT_LIGHT_SUBTYPE = 'night-light';
 
 /**
- * One PlatformAccessory per physical Feeder-Robot, exposing food level, a momentary "Feed Now"
- * switch, and a night light toggle. Gravity mode/panel lock are left for later since they're
- * not needed yet.
+ * Manages three separate PlatformAccessories for one physical Feeder-Robot -- food level, a
+ * momentary "Feed Now" switch, and a night light toggle -- each its own Home app tile. Gravity
+ * mode/panel lock are left for later since they're not needed yet.
+ *
+ * These used to be one accessory with multiple services, but Home groups same-type services
+ * (both switches) into a single tile and won't adopt a plugin's per-service names over a name
+ * the user already assigned to a sibling service -- so a new switch would show up mislabeled
+ * with whatever name was already given to the other one. Separate accessories avoid that
+ * entirely, at the cost of one more tile in Home per feeder.
  *
  * Food level is reported via a HumiditySensor (CurrentRelativeHumidity), not the more
  * semantically-correct FilterMaintenance. A standalone FilterMaintenance service (not attached
@@ -28,35 +32,25 @@ export class FeederRobotAccessory {
 
   constructor(
     private readonly platform: FeederRobotPlatform,
-    private readonly accessory: PlatformAccessory,
+    private readonly foodLevelAccessory: PlatformAccessory,
+    private readonly feedNowAccessory: PlatformAccessory,
+    private readonly nightLightAccessory: PlatformAccessory,
     private readonly client: WhiskerApiClient,
     feeder: FeederUnit,
   ) {
     this.feeder = feeder;
     const { Service: HapService, Characteristic } = this.platform;
 
-    this.accessory.getService(HapService.AccessoryInformation)!
-      .setCharacteristic(Characteristic.Manufacturer, 'Whisker')
-      .setCharacteristic(Characteristic.Model, 'Feeder-Robot')
-      .setCharacteristic(Characteristic.SerialNumber, feeder.serial)
-      .setCharacteristic(Characteristic.FirmwareRevision, feeder.state.info.fwVersion || 'unknown');
-
-    // Clean up services from earlier versions of this plugin, if present, so accessories that
-    // were already paired don't end up with duplicate/orphaned services:
-    // - FilterMaintenance, replaced by the HumiditySensor above.
-    // - the un-subtyped Feed Now Switch, replaced by the subtyped one below (needed now that a
-    //   second Switch -- Night Light -- lives on the same accessory).
-    const staleFilterService = this.accessory.getService(HapService.FilterMaintenance);
-    if (staleFilterService) {
-      this.accessory.removeService(staleFilterService);
-    }
-    const legacySwitchService = this.accessory.getService(HapService.Switch);
-    if (legacySwitchService) {
-      this.accessory.removeService(legacySwitchService);
+    for (const accessory of [foodLevelAccessory, feedNowAccessory, nightLightAccessory]) {
+      accessory.getService(HapService.AccessoryInformation)!
+        .setCharacteristic(Characteristic.Manufacturer, 'Whisker')
+        .setCharacteristic(Characteristic.Model, 'Feeder-Robot')
+        .setCharacteristic(Characteristic.SerialNumber, feeder.serial)
+        .setCharacteristic(Characteristic.FirmwareRevision, feeder.state.info.fwVersion || 'unknown');
     }
 
-    this.levelService = this.accessory.getService(HapService.HumiditySensor)
-      || this.accessory.addService(HapService.HumiditySensor, `${feeder.name} Food Level`);
+    this.levelService = this.foodLevelAccessory.getService(HapService.HumiditySensor)
+      || this.foodLevelAccessory.addService(HapService.HumiditySensor, `${feeder.name} Food Level`);
     this.levelService.setCharacteristic(Characteristic.Name, `${feeder.name} Food Level`);
 
     this.levelService.getCharacteristic(Characteristic.CurrentRelativeHumidity)
@@ -64,15 +58,15 @@ export class FeederRobotAccessory {
     this.levelService.getCharacteristic(Characteristic.StatusFault)
       .onGet(() => this.statusFault());
 
-    this.feedNowService = this.accessory.getServiceById(HapService.Switch, FEED_NOW_SUBTYPE)
-      || this.accessory.addService(HapService.Switch, `${feeder.name} Feed Now`, FEED_NOW_SUBTYPE);
+    this.feedNowService = this.feedNowAccessory.getService(HapService.Switch)
+      || this.feedNowAccessory.addService(HapService.Switch, `${feeder.name} Feed Now`);
     this.feedNowService.setCharacteristic(Characteristic.Name, `${feeder.name} Feed Now`);
     this.feedNowService.getCharacteristic(Characteristic.On)
       .onGet(() => false)
       .onSet(this.handleFeedNow.bind(this));
 
-    this.nightLightService = this.accessory.getServiceById(HapService.Switch, NIGHT_LIGHT_SUBTYPE)
-      || this.accessory.addService(HapService.Switch, `${feeder.name} Night Light`, NIGHT_LIGHT_SUBTYPE);
+    this.nightLightService = this.nightLightAccessory.getService(HapService.Switch)
+      || this.nightLightAccessory.addService(HapService.Switch, `${feeder.name} Night Light`);
     this.nightLightService.setCharacteristic(Characteristic.Name, `${feeder.name} Night Light`);
     this.nightLightService.getCharacteristic(Characteristic.On)
       .onGet(() => Boolean(this.feeder.state.info.autoNightMode))

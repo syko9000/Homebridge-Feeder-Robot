@@ -4,15 +4,16 @@ Homebridge plugin for the Whisker Feeder-Robot automatic pet feeder, exposing it
 HomeKit. Talks to the same Cognito/GraphQL/REST API as the Whisker mobile app (reverse-engineered
 by [pylitterbot](https://github.com/natekspencer/pylitterbot)).
 
-## Features (v1)
+## Features
 
 - **Food level** — shown as a `%` sensor (Home renders it as a Humidity Sensor tile; a standalone
   Filter Maintenance service, which would be the more accurate HomeKit type, doesn't get its own
   tile in the Home app)
 - **Feed Now** — a momentary switch that dispenses a snack
+- **Night light** — a switch that toggles the feeder's auto night light mode
 
-Gravity mode, night light, panel lockout, and feeding-schedule editing are supported by the
-underlying API client but not yet wired up to HomeKit accessories.
+Gravity mode, panel lockout, and feeding-schedule editing are supported by the underlying API
+client but not yet wired up to HomeKit accessories.
 
 ## Installation
 

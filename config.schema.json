@@ -17,7 +17,13 @@
         "required": true,
         "default": "my_password"
       },
-      "debugMode": {  
+      "pollingIntervalSeconds": {
+        "title": "Polling Interval (seconds)",
+        "type": "integer",
+        "required": false,
+        "default": 60
+      },
+      "debugMode": {
         "title": "Debug Mode",
         "type": "boolean",
         "required": false,

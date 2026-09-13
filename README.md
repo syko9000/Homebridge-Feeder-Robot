@@ -1,54 +1,62 @@
-# Whisker Feeder Robot Homebridge Plugin
+# Homebridge Feeder-Robot
 
-This is not yet functional.
+Homebridge plugin for the Whisker Feeder-Robot automatic pet feeder, exposing it to Apple
+HomeKit. Talks to the same Cognito/GraphQL/REST API as the Whisker mobile app (reverse-engineered
+by [pylitterbot](https://github.com/natekspencer/pylitterbot)).
 
-## Features
-- Supports Multiple Feeder Robot Devices 🤖🤖🤖🤖🤖🤖🤖
-- Toggle The Night Light mode 💡
-- Give A Snack 🐟
-- Food Level 📉
+## Features (v1)
 
+- **Food level** — shown as a `%` sensor (Home renders it as a Humidity Sensor tile; a standalone
+  Filter Maintenance service, which would be the more accurate HomeKit type, doesn't get its own
+  tile in the Home app)
+- **Feed Now** — a momentary switch that dispenses a snack
 
-## Supported Robot Versions
-- Feeder Robot
+Gravity mode, night light, panel lockout, and feeding-schedule editing are supported by the
+underlying API client but not yet wired up to HomeKit accessories.
 
 ## Installation
 
-#### For Homebridge Web UI Users
-Go to plugin page, search for `@syko9000/Homebridge-Feeder-Robot` and install it.
+#### Homebridge Config UI X
 
-#### For Homebridge Command Line Users
+Search for `Feeder Robot` in the Plugins tab and install it.
 
-Run the following command in the terminal:
+#### Command line
+
+```bash
+npm install -g homebridge-feeder-robot
 ```
-npm install @syko9000/Homebridge-Feeder-Robot
-```
-
 
 ## Configuration
 
-Configuration should be very simple!
+### Config UI X
 
-### Homebridge Web UI 
-Just enter the Username and Password you use for your Whisker App
+Enter the email and password you use for the Whisker app.
 
-### Homebridge Command Line Users
+### Manual `config.json`
 
 ```json
 {
-            "platform": "FeederRobot",
-            "email": "whisker.app@email.com",
-            "password": "WhiskerAppPassword"
+  "platform": "FeederRobot",
+  "name": "FeederRobot",
+  "email": "you@example.com",
+  "password": "your-whisker-app-password",
+  "pollingIntervalSeconds": 60
 }
 ```
 
+| Key                      | Required | Default | Description                                      |
+| ------------------------ | -------- | ------- | ------------------------------------------------- |
+| `email`                  | yes      | —       | Whisker app account email                          |
+| `password`               | yes      | —       | Whisker app account password                       |
+| `pollingIntervalSeconds` | no       | `60`    | How often to refresh feeder state from the API     |
+| `debugMode`               | no       | `false` | Verbose logging                                    |
+
 ## Limitations
 
-## FAQ
-
+- One Whisker account per platform block; if you have multiple accounts, add multiple platform
+  entries.
+- State updates via polling only for now — no push/WebSocket updates yet.
 
 ## Contributing
-PRs and issues are welcome.
 
-# 
-Thanks for taking a look at my project! If it helps you, please give it a star ⭐️
+PRs and issues are welcome.

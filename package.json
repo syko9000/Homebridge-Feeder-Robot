@@ -1,7 +1,7 @@
 {
   "displayName": "Feeder Robot",
   "name": "homebridge-feeder-robot",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Whisker Feeder Robot Plugin for Apple HomeKit via Homebridge",
   "license": "Apache-2.0",
   "author": "syko9000",
